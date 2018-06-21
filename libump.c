@@ -44,10 +44,10 @@
 typedef unsigned char ump_message[LIBUMP_MAX_MESSAGE_SIZE];
 //#define USING_LEGACY_OPENLOOP_STEPS
 
-#ifdef _WINDOWS
-HRESULT __stdcall DllRegisterServer(void) { return S_OK; }
-HRESULT __stdcall DllUnregisterServer(void) { return S_OK; }
-#endif
+//#ifdef _WINDOWS
+//HRESULT __stdcall DllRegisterServer(void) { return S_OK; }
+//HRESULT __stdcall DllUnregisterServer(void) { return S_OK; }
+//#endif
 
 #ifndef __PRETTY_FUNCTION__
 #define __PRETTY_FUNCTION__ __func__
@@ -90,8 +90,8 @@ typedef long long suseconds_t ;
 int gettimeofday(struct timeval* t,void* timezone)
 {       struct _timeb timebuffer;
         _ftime( &timebuffer );
-        t->tv_sec=timebuffer.time;
-        t->tv_usec=1000*timebuffer.millitm;
+        t->tv_sec = timebuffer.time;
+        t->tv_usec = 1000 * timebuffer.millitm;
         return 0;
 }
 
@@ -297,7 +297,7 @@ static bool udp_set_address(IPADDR *addr, const char *s)
     // return inet_aton(s, &addr->sin_addr) > 0;
 }
 
-static int udp_recv(ump_state *hndl, unsigned char *response, const size_t response_size, IPADDR *from)
+static int udp_recv(ump_state *hndl, unsigned char *response, const int response_size, IPADDR *from)
 {
     int ret;
     if((ret = udp_select(hndl, hndl->timeout)) < 0)
@@ -840,7 +840,7 @@ int ump_get_positions(ump_state *hndl, int *x, int *y, int *z, int *w)
                                 hndl->refresh_time_limit, x, y, z, w, NULL);
 }
 
-int ump_get_speeds(ump_state *hndl, float *x, float *y, float *z, float *w)
+int ump_get_speeds(ump_state *hndl, double *x, double *y, double *z, double *w)
 {
     if(!hndl)
         return set_last_error(hndl, LIBUMP_NOT_OPEN);;
@@ -874,7 +874,7 @@ int ump_get_w_position(ump_state *hndl)
     return ump_get_position_ext(hndl, hndl->last_device_sent, 'w');
 }
 
-float ump_get_speed_ext(ump_state *hndl, const int dev, const char axis)
+double ump_get_speed_ext(ump_state *hndl, const int dev, const char axis)
 {
     if(!hndl || is_invalid_dev(dev))
         return 0.0;
@@ -965,7 +965,7 @@ static int ump_update_positions_cache(ump_state *hndl, const int sender_id, cons
 {
     ump_positions *positions = &hndl->last_positions[sender_id];
     int *pos_ptr = NULL;
-    float *speed_ptr = NULL;
+    double *speed_ptr = NULL;
     int step_nm;
 
     switch(axis_index)
@@ -992,7 +992,7 @@ static int ump_update_positions_cache(ump_state *hndl, const int sender_id, cons
     step_nm = pos_nm - *pos_ptr;
     *pos_ptr = pos_nm;
     if(time_step_us > 0)
-        *speed_ptr = (float)step_nm *1000.0 / (float)time_step_us;
+        *speed_ptr = step_nm *1000.0 /time_step_us;
     else
         *speed_ptr = 0.0;
     return axis_index;
@@ -1624,7 +1624,7 @@ int ump_get_positions_ext(ump_state *hndl, const int dev, const int time_limit,
     return ret;
 }
 
-int ump_get_speeds_ext(ump_state *hndl, const int dev, float *x, float *y, float *z, float *w, unsigned long long *elapsedptr)
+int ump_get_speeds_ext(ump_state *hndl, const int dev, double *x, double *y, double *z, double *w, unsigned long long *elapsedptr)
 {
     int ret = 0;
     ump_positions *positions;

@@ -178,9 +178,9 @@ void parse_args(int argc, char *argv[], params_struct *params)
     }
 }
 
-static float um(const int nm)
+static double um(const int nm)
 {
-    return (float)nm/1000.0;
+    return nm/1000.0;
 }
 
 
