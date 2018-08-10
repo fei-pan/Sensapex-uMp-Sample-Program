@@ -90,8 +90,8 @@ typedef long long suseconds_t ;
 int gettimeofday(struct timeval* t,void* timezone)
 {       struct _timeb timebuffer;
         _ftime( &timebuffer );
-        t->tv_sec = timebuffer.time;
-        t->tv_usec = 1000 * timebuffer.millitm;
+        t->tv_sec=(long)timebuffer.time;
+        t->tv_usec=1000*timebuffer.millitm;
         return 0;
 }
 
@@ -283,7 +283,7 @@ static int udp_select(ump_state *hndl, int timeout)
     timev.tv_usec = (timeout%1000)*1000L;
     FD_ZERO(&fdSet);
     FD_SET(hndl->socket,&fdSet);
-    return select(hndl->socket+1, &fdSet, NULL, NULL, &timev );
+    return select((int)(hndl->socket)+1, &fdSet, NULL, NULL, &timev );
 }
 
 static bool udp_set_address(IPADDR *addr, const char *s)
@@ -840,7 +840,7 @@ int ump_get_positions(ump_state *hndl, int *x, int *y, int *z, int *w)
                                 hndl->refresh_time_limit, x, y, z, w, NULL);
 }
 
-int ump_get_speeds(ump_state *hndl, double *x, double *y, double *z, double *w)
+int ump_get_speeds(ump_state *hndl, float *x, float *y, float *z, float *w)
 {
     if(!hndl)
         return set_last_error(hndl, LIBUMP_NOT_OPEN);;
@@ -874,7 +874,7 @@ int ump_get_w_position(ump_state *hndl)
     return ump_get_position_ext(hndl, hndl->last_device_sent, 'w');
 }
 
-double ump_get_speed_ext(ump_state *hndl, const int dev, const char axis)
+float ump_get_speed_ext(ump_state *hndl, const int dev, const char axis)
 {
     if(!hndl || is_invalid_dev(dev))
         return 0.0;
@@ -965,7 +965,7 @@ static int ump_update_positions_cache(ump_state *hndl, const int sender_id, cons
 {
     ump_positions *positions = &hndl->last_positions[sender_id];
     int *pos_ptr = NULL;
-    double *speed_ptr = NULL;
+    float *speed_ptr = NULL;
     int step_nm;
 
     switch(axis_index)
@@ -1548,7 +1548,7 @@ int ump_get_axis_count_ext(ump_state *hndl, const int dev)
 }
 
 int ump_get_positions_ext(ump_state *hndl, const int dev, const int time_limit,
-                         int *x, int *y, int *z, int *w, unsigned long long *elapsedptr)
+                         int *x, int *y, int *z, int *w, int *elapsedptr)
 {
     int resp[4], ret = 0;
     ump_positions *positions;
@@ -1586,7 +1586,7 @@ int ump_get_positions_ext(ump_state *hndl, const int dev, const int time_limit,
             ret++;
         }
         if(elapsedptr)
-            *elapsedptr = elapsed;
+            *elapsedptr = (int)elapsed;
         return ret;
     }
     // request positions from the manipulator
@@ -1620,11 +1620,11 @@ int ump_get_positions_ext(ump_state *hndl, const int dev, const int time_limit,
     }
     positions->updated_us =  get_timestamp_us();
     if(elapsedptr)
-        *elapsedptr = get_elapsed(start);
+        *elapsedptr = (int)get_elapsed(start);
     return ret;
 }
 
-int ump_get_speeds_ext(ump_state *hndl, const int dev, double *x, double *y, double *z, double *w, unsigned long long *elapsedptr)
+int ump_get_speeds_ext(ump_state *hndl, const int dev, float *x, float *y, float *z, float *w, int *elapsedptr)
 {
     int ret = 0;
     ump_positions *positions;
@@ -1656,7 +1656,7 @@ int ump_get_speeds_ext(ump_state *hndl, const int dev, double *x, double *y, dou
     }
 
     if(elapsedptr)
-        *elapsedptr = elapsed;
+        *elapsedptr = (int)elapsed;
     return ret;
 }
 

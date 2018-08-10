@@ -159,10 +159,10 @@ typedef struct ump_positions_s
     int y;                 /**< Y-actuator position */
     int z;                 /**< Z-actuator position */
     int w;                 /**< W-actuator position */
-    double speed_x;         /**< X-actuator movement speed between last two position updates */
-    double speed_y;         /**< Y-actuator movement speed between last two position updates */
-	double speed_z;         /**< Z-actuator movement speed between last two position updates */
-	double speed_w;         /**< W-actuator movement speed between last two position updates */
+    float speed_x;         /**< X-actuator movement speed between last two position updates */
+    float speed_y;         /**< Y-actuator movement speed between last two position updates */
+    float speed_z;         /**< Z-actuator movement speed between last two position updates */
+    float speed_w;         /**< W-actuator movement speed between last two position updates */
     unsigned long long updated_us; /**< Timestamp (in microseconds) when positions were updated */
 } ump_positions;
 
@@ -468,7 +468,7 @@ LIBUMP_SHARED_EXPORT int ump_get_positions(ump_state *hndl, int *x, int *y, int 
  *          Negative value indicates an error
  */
 
-LIBUMP_SHARED_EXPORT int ump_get_speeds(ump_state *hndl, double *x, double *y, double *z, double *w);
+LIBUMP_SHARED_EXPORT int ump_get_speeds(ump_state *hndl, float *x, float *y, float *z, float *w);
 
 /**
  * @brief Read positions from the manipulator to the cache, use e.g. #ump_get_x_position
@@ -758,7 +758,7 @@ LIBUMP_SHARED_EXPORT int ump_receive(ump_state *hndl, const int timelimit);
  */
 
 LIBUMP_SHARED_EXPORT int ump_get_positions_ext(ump_state *hndl, const int dev, const int time_limit,
-                                               int *x, int *y, int *z, int *w, unsigned long long *elapsed);
+                                               int *x, int *y, int *z, int *w, int *elapsed);
 
 /**
  * @brief An advanced API for reading actuator speeds of certain manipulator and
@@ -776,7 +776,7 @@ LIBUMP_SHARED_EXPORT int ump_get_positions_ext(ump_state *hndl, const int dev, c
  * @return  Negative value if an error occured. Zero or positive value otherwise
  */
 
-LIBUMP_SHARED_EXPORT  int ump_get_speeds_ext(ump_state *hndl, const int dev, double *x, double *y, double *z, double *w, unsigned long long *elapsedptr);
+LIBUMP_SHARED_EXPORT  int ump_get_speeds_ext(ump_state *hndl, const int dev, float *x, float*y, float *z, float *w, int *elapsedptr);
 
 /**
  * @brief An advanced API for reading positions of certain manipulator to the cache
@@ -816,7 +816,7 @@ LIBUMP_SHARED_EXPORT int ump_get_position_ext(ump_state *hndl, const int dev, co
  * @return  axis movement speed in um/s
  */
 
-LIBUMP_SHARED_EXPORT double ump_get_speed_ext(ump_state *hndl, const int dev, const char axis);
+LIBUMP_SHARED_EXPORT float ump_get_speed_ext(ump_state *hndl, const int dev, const char axis);
 
 
 
