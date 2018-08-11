@@ -1,12 +1,12 @@
 /*
- * A Software Development Kit for Sensapex 2015 series Micromanipulator
+ * A software development kit for Sensapex 2015 series Micromanipulator
  *
  * Copyright (c) 2015-2017, Sensapex Oy
  * All rights reserved.
  *
  * This file is part of 2015 series Sensapex Micromanipulator SDK
  *
- * The Sensapex Micromanipulator SDK is free software: you can redistribute
+ * The Sensapex micromanipulator SDK is free software: you can redistribute
  * it and/or modify it under the terms of the GNU Lesser General Public License
  * as published by the Free Software Foundation, either version 3 of the License,
  * or (at your option) any later version.
@@ -17,7 +17,7 @@
  * GNU Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
- * along with the Sensapex Micromanipulator SDK. If not, see
+ * along with the Sensapex micromanipulator SDK. If not, see
  * <http://www.gnu.org/licenses/>.
  *
  */
@@ -44,10 +44,10 @@
 typedef unsigned char ump_message[LIBUMP_MAX_MESSAGE_SIZE];
 //#define USING_LEGACY_OPENLOOP_STEPS
 
-//#ifdef _WINDOWS
-//HRESULT __stdcall DllRegisterServer(void) { return S_OK; }
-//HRESULT __stdcall DllUnregisterServer(void) { return S_OK; }
-//#endif
+#ifdef _WINDOWS
+HRESULT __stdcall DllRegisterServer(void) { return S_OK; }
+HRESULT __stdcall DllUnregisterServer(void) { return S_OK; }
+#endif
 
 #ifndef __PRETTY_FUNCTION__
 #define __PRETTY_FUNCTION__ __func__
@@ -283,7 +283,7 @@ static int udp_select(ump_state *hndl, int timeout)
     timev.tv_usec = (timeout%1000)*1000L;
     FD_ZERO(&fdSet);
     FD_SET(hndl->socket,&fdSet);
-    return select((int)(hndl->socket)+1, &fdSet, NULL, NULL, &timev );
+    return select((int)hndl->socket+1, &fdSet, NULL, NULL, &timev );
 }
 
 static bool udp_set_address(IPADDR *addr, const char *s)
@@ -292,8 +292,7 @@ static bool udp_set_address(IPADDR *addr, const char *s)
         return false;
     addr->sin_family = AF_INET;
     // Poor winsocks does not have even old inet_aton, only
-    return((int)(addr->sin_addr.s_addr = inet_pton(AF_INET,s,&addr->sin_addr.S_un))!= -1);
-	//inet_pton(AF_INET,s,&addr->sin_addr.S_un);
+    return((int)(addr->sin_addr.s_addr = inet_addr(s)) != -1);
     // return inet_aton(s, &addr->sin_addr) > 0;
 }
 
@@ -402,8 +401,7 @@ bool udp_get_local_address(ump_state *hndl, IPADDR *addr)
         return false;
     }
     closesocket(testSocket);
-	char ipbuf[INET_ADDRSTRLEN];
-    ump_log_print(hndl, 2, __PRETTY_FUNCTION__, "%s:%d", inet_ntop(AF_INET, &addr->sin_addr, ipbuf, sizeof(ipbuf)),ntohs(addr->sin_port));
+    ump_log_print(hndl, 2, __PRETTY_FUNCTION__, "%s:%d", inet_ntoa(addr->sin_addr),ntohs(addr->sin_port));
     return true;
 }
 
@@ -521,13 +519,11 @@ static int ump_send(ump_state *hndl, const int dev, const unsigned char *data, i
         smcp1_subblock_header *sub_block = (smcp1_subblock_header *)(((unsigned char*)data) + SMCP1_FRAME_SIZE);
         int32_t *data_ptr  = (int32_t*)(data) + (SMCP1_FRAME_SIZE + SMCP1_SUB_BLOCK_HEADER_SIZE)/sizeof(int32_t);
 
-		char ipbuf[INET_ADDRSTRLEN];
-
         ump_log_print(hndl, 2, __PRETTY_FUNCTION__, "type %d id %d sender %d receiver %d blocks %d options 0x%02X to %s:%d",
                 ntohs(header->type), ntohs(header->message_id),
                 ntohs(header->sender_id), ntohs(header->receiver_id),
                 ntohs(header->sub_blocks),
-                (int)ntohl(header->options), inet_ntop(AF_INET, &to.sin_addr, ipbuf, sizeof(ipbuf)), ntohs(to.sin_port));
+                (int)ntohl(header->options), inet_ntoa(to.sin_addr), ntohs(to.sin_port));
         if(ntohs(header->sub_blocks))
         {
             int data_size = ntohs(sub_block->data_size);
@@ -992,7 +988,7 @@ static int ump_update_positions_cache(ump_state *hndl, const int sender_id, cons
     step_nm = pos_nm - *pos_ptr;
     *pos_ptr = pos_nm;
     if(time_step_us > 0)
-        *speed_ptr = step_nm *1000.0 /time_step_us;
+        *speed_ptr = (float)step_nm *1000.0 / (float)time_step_us;
     else
         *speed_ptr = 0.0;
     return axis_index;
@@ -1035,10 +1031,9 @@ static int ump_recv(ump_state *hndl, ump_message *msg)
     type = ntohs(header->type);
     message_id = ntohs(header->message_id);
     sub_blocks = ntohs(header->sub_blocks);
-	char ipbuf[INET_ADDRSTRLEN];
 
     ump_log_print(hndl, 3,__PRETTY_FUNCTION__, "type %d id %d sender %d receiver %d options 0x%02X from %s:%d",
-                  type, message_id, sender_id, receiver_id, options, inet_ntop(AF_INET, &from.sin_addr, ipbuf, sizeof(ipbuf)), ntohs(from.sin_port));
+                  type, message_id, sender_id, receiver_id, options, inet_ntoa(from.sin_addr), ntohs(from.sin_port));
     if(is_valid_dev(sender_id))
         memcpy(&hndl->addresses[sender_id], &from, sizeof(IPADDR));
     else if(is_cu_dev(sender_id))
